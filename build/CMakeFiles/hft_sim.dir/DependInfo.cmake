@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/Users/sohaib/Downloads/untitled folder/High-frequency-trading-simulator-main/src/main.cpp" "CMakeFiles/hft_sim.dir/src/main.cpp.o" "gcc" "CMakeFiles/hft_sim.dir/src/main.cpp.o.d"
+  "/home/kunsh/Cpp/Snap/OpenSource/HFT-Simulator/src/main.cpp" "CMakeFiles/hft_sim.dir/src/main.cpp.o" "gcc" "CMakeFiles/hft_sim.dir/src/main.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

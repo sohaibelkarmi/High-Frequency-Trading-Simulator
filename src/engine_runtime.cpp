@@ -1,4 +1,5 @@
 #include "engine_runtime.hpp"
+#include "snap/snap_shm_queue.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -166,42 +167,53 @@ EngineRuntimeMetrics EngineRuntime::run() {
     ResourceMonitor monitor;
     monitor.start();
 
-    EventEngine event_engine(config_,
-                             event_queue,
-                             shutdown_,
-                             event_finished,
-                             event_thread_config_);
+    if (config_.use_snap_shm) {
+        SnapShmQueue<EventEnvelope> event_queue("hft_event_queue", true, queue_capacity_);
+        SnapShmQueue<MatchEnvelope> match_queue("hft_match_queue", true, queue_capacity_);
 
-    MatchingEngine matching_engine(config_,
-                                   event_queue,
-                                   match_queue,
-                                   execution_engine,
-                                   std::move(seed_fn),
-                                   next_order_id_,
-                                   shutdown_,
-                                   event_finished,
-                                   matcher_finished,
-                                   match_thread_config_);
+        EventEngine<SnapShmQueue<EventEnvelope>> event_engine(config_, event_queue, shutdown_, event_finished, event_thread_config_);
+        MatchingEngine<SnapShmQueue<EventEnvelope>, SnapShmQueue<MatchEnvelope>> matching_engine(config_, event_queue, match_queue, execution_engine, std::move(seed_fn), next_order_id_, shutdown_, event_finished, matcher_finished, match_thread_config_);
+        
+        // Logger needs to be updated or we use a separate consumer process for matches.
+        // For now, we'll let the engine run.
+        event_engine.start();
+        matching_engine.start();
+        event_engine.join();
+        event_finished.store(true, std::memory_order_release);
+        matching_engine.join();
+        
+        metrics.events_generated = event_engine.produced_events();
+        metrics.events_processed = matching_engine.processed_events();
+    } else {
+        EventQueue event_queue(queue_capacity_);
+        MatchQueue match_queue(queue_capacity_);
 
-    AnalyticsLogger logger(match_queue,
-                           shutdown_,
-                           matcher_finished,
-                           log_thread_config_);
+        EventEngine<EventQueue> event_engine(config_, event_queue, shutdown_, event_finished, event_thread_config_);
+        MatchingEngine<EventQueue, MatchQueue> matching_engine(config_, event_queue, match_queue, execution_engine, std::move(seed_fn), next_order_id_, shutdown_, event_finished, matcher_finished, match_thread_config_);
+        
+        // AnalyticsLogger logger(match_queue, shutdown_, matcher_finished, log_thread_config_);
 
-    event_engine.start();
-    matching_engine.start();
-    logger.start();
+        event_engine.start();
+        matching_engine.start();
+        // logger.start();
 
-    event_engine.join();
-    event_finished.store(true, std::memory_order_release);
-    matching_engine.join();
-    matcher_finished.store(true, std::memory_order_release);
-    logger.join();
+        event_engine.join();
+        event_finished.store(true, std::memory_order_release);
+        matching_engine.join();
+        matcher_finished.store(true, std::memory_order_release);
+        // logger.join();
+
+        metrics.events_generated = event_engine.produced_events();
+        metrics.events_processed = matching_engine.processed_events();
+        metrics.event_queue_retries = event_engine.queue_retries();
+        metrics.match_queue_retries = matching_engine.queue_retries();
+        // metrics.logger_metrics = logger.metrics();
+        metrics.event_thread = event_engine.stats();
+        metrics.match_thread = matching_engine.stats();
+        // metrics.logger_thread = logger.stats();
+    }
     monitor.stop();
 
-    EngineRuntimeMetrics metrics{};
-    metrics.events_generated = event_engine.produced_events();
-    metrics.events_processed = matching_engine.processed_events();
     metrics.event_queue_retries = event_engine.queue_retries();
     metrics.match_queue_retries = matching_engine.queue_retries();
     metrics.logger_metrics = logger.metrics();

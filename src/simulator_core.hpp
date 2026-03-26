@@ -27,11 +27,12 @@ struct SimulationConfig {
     ExecutionCostConfig execution_cost{};
     double base_aggressiveness{1.0};
     std::int32_t aggressive_order_size{1};
+    bool use_snap_shm{false};
 };
 
 struct IntensitySample {
     double time{};
-    IntensityBuffer lambda;
+    SnapIntensityBuffer lambda;
 };
 
 struct ArrivalRecord {

@@ -115,11 +115,20 @@ std::vector<OrderBook::Fill> OrderBook::match(
     double price,
     std::int32_t quantity
 ) {
-    HFT_PROFILE_SCOPE("OrderBook::match");
     std::vector<Fill> fills;
-    if (quantity <= 0) {
-        return fills;
-    }
+    match_into(aggressor, price, quantity, fills);
+    return fills;
+}
+
+void OrderBook::match_into(
+    Side aggressor,
+    double price,
+    std::int32_t quantity,
+    std::vector<Fill>& fills
+) {
+    HFT_PROFILE_SCOPE("OrderBook::match_into");
+    fills.clear();
+    if (quantity <= 0) return;
 
     PriceTick limit = price > 0.0 ? toTicks(price) : PriceTick{0};
     std::int64_t remaining = quantity;
@@ -127,73 +136,42 @@ std::vector<OrderBook::Fill> OrderBook::match(
     auto process_book = [&](auto& book_ref, bool match_asks) {
         for (auto& entry : book_ref.entries()) {
             PriceTick levelPrice = entry.price;
-            bool price_accept = (limit == 0);
-            if (!price_accept) {
-                if (match_asks) {
-                    price_accept = levelPrice <= limit;
-                } else {
-                    price_accept = levelPrice >= limit;
-                }
-            }
-            if (!price_accept) {
-                break;
-            }
+            bool price_accept = (limit == 0) || (match_asks ? levelPrice <= limit : levelPrice >= limit);
+            if (!price_accept) break;
 
             PriceLevel& level = *entry.level;
             OrderNode* node = level.head;
             while (node != nullptr && remaining > 0) {
                 OrderNode* next = node->next;
                 const std::int32_t available = node->data.quantity;
-                const std::int32_t executed = static_cast<std::int32_t>(
-                    std::min<std::int64_t>(available, remaining)
-                );
-                if (executed <= 0) {
-                    node = next;
-                    continue;
-                }
+                const std::int32_t executed = static_cast<std::int32_t>(std::min<std::int64_t>(available, remaining));
+                if (executed <= 0) { node = next; continue; }
 
                 remaining -= executed;
                 level.totalQuantity -= executed;
-                if (level.totalQuantity < 0) level.totalQuantity = 0;
-
-                double level_price = fromTicks(levelPrice);
-                double fill_price = price > 0.0 ? price : level_price;
-
-                const std::int32_t remaining_after = available - executed;
-                Fill fill;
-                fill.order = node->data;
-                fill.order.quantity = remaining_after;
-                fill.executedQuantity = executed;
-                fill.fillPrice = fill_price;
+                
+                double lp = fromTicks(levelPrice);
+                double fp = price > 0.0 ? price : lp;
+                
+                Fill fill{node->data, executed, fp};
+                fill.order.quantity = available - executed;
                 fills.push_back(fill);
 
-                node->data.quantity = remaining_after;
-                if (remaining_after <= 0) {
+                node->data.quantity = available - executed;
+                if (node->data.quantity <= 0) {
                     locator_table_.erase(fill.order.id);
                     level.remove(node);
                     pool_.release(node);
                 }
-
                 node = next;
             }
-
-            if (level.empty()) {
-                book_ref.eraseIfEmpty(levelPrice);
-            }
-
-            if (remaining <= 0) {
-                break;
-            }
+            if (level.empty()) book_ref.eraseIfEmpty(levelPrice);
+            if (remaining <= 0) break;
         }
     };
 
-    if (aggressor == Side::Buy) {
-        process_book(asks_, true);
-    } else {
-        process_book(bids_, false);
-    }
-
-    return fills;
+    if (aggressor == Side::Buy) process_book(asks_, true);
+    else process_book(bids_, false);
 }
 
 std::vector<OrderBook::LevelSnapshot> OrderBook::levels(std::size_t depth) const {

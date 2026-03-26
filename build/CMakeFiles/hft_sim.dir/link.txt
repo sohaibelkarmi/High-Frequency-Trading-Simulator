@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/hft_sim.dir/src/main.cpp.o -o hft_sim  libhft_core.a
+/usr/bin/c++ CMakeFiles/hft_sim.dir/src/main.cpp.o -o hft_sim  libhft_core.a 

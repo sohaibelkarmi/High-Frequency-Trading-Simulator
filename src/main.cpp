@@ -4,10 +4,12 @@
 #include "simulator_core.hpp"
 #include "perf/Profiler.hpp"
 
-int main() {
+int main(int argc, char* argv[]) {
     using namespace simulator;
+    bool use_snap = (argc > 1 && std::string(argv[1]) == "--snap");
 
     SimulationConfig config = default_btcusdt_config();
+    config.use_snap_shm = use_snap;
     SimulatorCore core(config);
     const SimulationResult result = core.run();
 
