@@ -6,6 +6,7 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include "memory_pool.hpp"
 
 namespace simulator {
 
@@ -14,6 +15,7 @@ struct HawkesEvent {
     std::size_t dimension;
     double intensity_total;
     double intensity_dimension;
+    SnapIntensityBuffer intensities; // Added for SHM capture
 };
 
 class IHawkesProcess {

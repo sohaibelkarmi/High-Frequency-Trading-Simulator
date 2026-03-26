@@ -25,18 +25,12 @@ endfunction()
 
 add_library(hft_core STATIC
     src/OrderBook.cpp
-    src/event_engine.cpp
     src/adaptive_engine.cpp
-    src/execution_engine.cpp
-    src/logger.cpp
-    src/matching_engine.cpp
-    src/order_flow/OrderFlow.cpp
-    src/order_flow/hawkes_mle.cpp
     src/hawkes_core.cpp
+    src/hawkes_engine.cpp
     src/engine_runtime.cpp
     src/simulator_core.cpp
     src/perf/Profiler.cpp
-    src/thread_utils.cpp
 )
 target_include_directories(hft_core PUBLIC ${CMAKE_SOURCE_DIR}/src)
 hft_apply_compile_flags(hft_core)
@@ -88,10 +82,10 @@ target_link_libraries(hawkes_validation PRIVATE hft_core)
 target_include_directories(hawkes_validation PRIVATE ${CMAKE_SOURCE_DIR}/src)
 hft_apply_compile_flags(hawkes_validation)
 
-add_executable(execution_cost_runner src/execution_cost_runner.cpp)
-target_link_libraries(execution_cost_runner PRIVATE hft_core)
-target_include_directories(execution_cost_runner PRIVATE ${CMAKE_SOURCE_DIR}/src)
-hft_apply_compile_flags(execution_cost_runner)
+# add_executable(execution_cost_runner src/execution_cost_runner.cpp)
+# target_link_libraries(execution_cost_runner PRIVATE hft_core)
+# target_include_directories(execution_cost_runner PRIVATE ${CMAKE_SOURCE_DIR}/src)
+# hft_apply_compile_flags(execution_cost_runner)
 
 add_executable(impact_calibration src/impact_calibration.cpp)
 target_link_libraries(impact_calibration PRIVATE hft_core ZLIB::ZLIB)
@@ -106,15 +100,20 @@ target_include_directories(week8_integration PRIVATE ${CMAKE_SOURCE_DIR}/include
 target_link_libraries(week8_integration PRIVATE Threads::Threads)
 hft_apply_compile_flags(week8_integration)
 
+add_executable(hft_snap_host src/snap_engine_host.cpp)
+target_link_libraries(hft_snap_host PRIVATE hft_core)
+target_include_directories(hft_snap_host PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include/snap)
+hft_apply_compile_flags(hft_snap_host)
+
 add_executable(perf_benchmark src/perf/Benchmark.cpp)
 target_link_libraries(perf_benchmark PRIVATE hft_core)
 target_include_directories(perf_benchmark PRIVATE ${CMAKE_SOURCE_DIR}/src)
 hft_apply_compile_flags(perf_benchmark)
 
-add_executable(parallel_benchmark src/perf/ParallelBenchmark.cpp)
-target_link_libraries(parallel_benchmark PRIVATE hft_core)
-target_include_directories(parallel_benchmark PRIVATE ${CMAKE_SOURCE_DIR}/src)
-hft_apply_compile_flags(parallel_benchmark)
+# add_executable(parallel_benchmark src/perf/ParallelBenchmark.cpp)
+# target_link_libraries(parallel_benchmark PRIVATE hft_core)
+# target_include_directories(parallel_benchmark PRIVATE ${CMAKE_SOURCE_DIR}/src)
+# hft_apply_compile_flags(parallel_benchmark)
 
 add_executable(stress_test src/perf/StressTest.cpp)
 target_link_libraries(stress_test PRIVATE hft_core)

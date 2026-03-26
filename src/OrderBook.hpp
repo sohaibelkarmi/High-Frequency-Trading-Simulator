@@ -30,7 +30,18 @@ public:
 
     void addLimitOrder(const Order& order);
     bool cancel(OrderId id);
-    std::vector<Fill> match(Side aggressor, double price, std::int32_t quantity);
+    std::vector<Fill> match(
+        Side aggressor,
+        double price,
+        std::int32_t quantity
+    );
+
+    void match_into(
+        Side aggressor,
+        double price,
+        std::int32_t quantity,
+        std::vector<Fill>& fills
+    );
 
     std::optional<Order> bestBid() const;
     std::optional<Order> bestAsk() const;

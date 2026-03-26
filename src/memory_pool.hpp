@@ -62,4 +62,10 @@ using PooledVector = std::vector<T, PoolAllocator<T>>;
 
 using IntensityBuffer = PooledVector<double>;
 
+static constexpr std::size_t MAX_HAWKES_DIM = 16;
+struct SnapIntensityBuffer {
+    double data[MAX_HAWKES_DIM];
+    std::size_t size;
+};
+
 } // namespace simulator

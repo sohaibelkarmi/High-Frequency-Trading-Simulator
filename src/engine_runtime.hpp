@@ -1,7 +1,7 @@
 #pragma once
 
 #include "event_engine.hpp"
-#include "logger.hpp"
+// #include "logger.hpp" // Missing in repo
 #include "matching_engine.hpp"
 #include "simulator_core.hpp"
 #include "thread_utils.hpp"
@@ -17,7 +17,8 @@ struct EngineRuntimeMetrics {
     std::size_t events_processed{0};
     std::size_t event_queue_retries{0};
     std::size_t match_queue_retries{0};
-    AnalyticsLogger::Metrics logger_metrics{};
+    struct LoggerMetrics { std::size_t logged{0}; };
+    LoggerMetrics logger_metrics{};
     concurrency::ThreadStats event_thread{};
     concurrency::ThreadStats match_thread{};
     concurrency::ThreadStats logger_thread{};
