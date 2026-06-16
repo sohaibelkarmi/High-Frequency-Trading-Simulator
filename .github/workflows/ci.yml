@@ -74,10 +74,10 @@ jobs:
       - name: Install C++ dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build zlib1g-dev
+          sudo apt-get install -y cmake ninja-build catch2
 
       - name: Configure C++ tests
-        run: cmake -S . -B build/cpp-tests -G Ninja -DHFT_ENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
+        run: cmake -S tests/cmake/order_book -B build/cpp-tests -G Ninja -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build order book tests
         run: cmake --build build/cpp-tests --target order_tests --parallel 2
