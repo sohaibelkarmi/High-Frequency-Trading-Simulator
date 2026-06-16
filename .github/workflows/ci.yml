@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  python:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -65,3 +65,22 @@ jobs:
         with:
           name: coverage-py${{ matrix.python-version }}
           path: coverage.xml
+
+  cpp-order-book:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install C++ dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build zlib1g-dev
+
+      - name: Configure C++ tests
+        run: cmake -S . -B build/cpp-tests -G Ninja -DHFT_ENABLE_TESTS=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build order book tests
+        run: cmake --build build/cpp-tests --target order_tests --parallel 2
+
+      - name: Run order book tests
+        run: ctest --test-dir build/cpp-tests -R order_tests --output-on-failure
