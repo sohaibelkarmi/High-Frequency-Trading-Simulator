@@ -125,8 +125,11 @@ std::vector<OrderBook::Fill> OrderBook::match(
     std::int64_t remaining = quantity;
 
     auto process_book = [&](auto& book_ref, bool match_asks) {
-        for (auto& entry : book_ref.entries()) {
-            PriceTick levelPrice = entry.price;
+        auto& entries = book_ref.entries();
+        std::size_t idx = 0;
+
+        while (idx < entries.size() && remaining > 0) {
+            const PriceTick levelPrice = entries[idx].price;
             bool price_accept = (limit == 0);
             if (!price_accept) {
                 if (match_asks) {
@@ -139,8 +142,10 @@ std::vector<OrderBook::Fill> OrderBook::match(
                 break;
             }
 
-            PriceLevel& level = *entry.level;
+            PriceLevel& level = *entries[idx].level;
+            const double fill_price = fromTicks(levelPrice);
             OrderNode* node = level.head;
+
             while (node != nullptr && remaining > 0) {
                 OrderNode* next = node->next;
                 const std::int32_t available = node->data.quantity;
@@ -156,13 +161,11 @@ std::vector<OrderBook::Fill> OrderBook::match(
                 level.totalQuantity -= executed;
                 if (level.totalQuantity < 0) level.totalQuantity = 0;
 
-                double level_price = fromTicks(levelPrice);
-                double fill_price = price > 0.0 ? price : level_price;
-
                 const std::int32_t remaining_after = available - executed;
                 Fill fill;
                 fill.order = node->data;
                 fill.order.quantity = remaining_after;
+                fill.order.execution_price = fill_price;
                 fill.executedQuantity = executed;
                 fill.fillPrice = fill_price;
                 fills.push_back(fill);
@@ -179,10 +182,8 @@ std::vector<OrderBook::Fill> OrderBook::match(
 
             if (level.empty()) {
                 book_ref.eraseIfEmpty(levelPrice);
-            }
-
-            if (remaining <= 0) {
-                break;
+            } else {
+                ++idx;
             }
         }
     };

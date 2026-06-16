@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  python:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,10 +34,10 @@ jobs:
           pip install pytest pytest-cov black flake8
 
       - name: Check formatting
-        run: black --check python tests/python
+        run: black --check tests/python
 
       - name: Lint
-        run: flake8 python tests/python
+        run: flake8 tests/python
 
       - name: Run tests
         run: pytest tests/python --cov=python --cov-report=xml
@@ -65,3 +65,22 @@ jobs:
         with:
           name: coverage-py${{ matrix.python-version }}
           path: coverage.xml
+
+  cpp-order-book:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install C++ dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build catch2
+
+      - name: Configure C++ tests
+        run: cmake -S tests/cmake/order_book -B build/cpp-tests -G Ninja -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build order book tests
+        run: cmake --build build/cpp-tests --target order_tests --parallel 2
+
+      - name: Run order book tests
+        run: ctest --test-dir build/cpp-tests -R order_tests --output-on-failure

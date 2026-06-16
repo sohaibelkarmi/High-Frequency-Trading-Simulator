@@ -15,10 +15,7 @@
     <img src="https://img.shields.io/badge/Streamlit-App-ff4b4b.svg?logo=streamlit&logoColor=white" alt="Streamlit app" />
   </a>
   <a href="docs/USAGE.md#execute-tests">
-    <img src="https://img.shields.io/badge/tests-passing-brightgreen.svg?logo=github" alt="Tests passing" />
-  </a>
-  <a href="docs/USAGE.md#execute-tests">
-    <img src="https://img.shields.io/badge/Coverage-100%25-44cc11.svg?logo=codecademy" alt="Coverage 100%" />
+    <img src="https://img.shields.io/badge/tests-Catch2-brightgreen.svg?logo=github" alt="Catch2 tests" />
   </a>
 </p>
 
@@ -34,7 +31,7 @@
 A practical sandbox for market microstructure research. Explore how clustered order flow emerges from Hawkes processes, prototype execution logic on a deterministic C++ limit order book, and surface results through notebooks, scripts, and a guided Streamlit front end.
 
 ## At a Glance
-- **Deterministic order book core** – Modern C++17 engine with price-time priority kept intentionally readable for experimentation.
+- **Deterministic order book core** – Modern C++20 engine with price-time priority kept intentionally readable for experimentation.
 - **Shared Hawkes kernels** – Exponential and power-law intensity implementations exposed to both C++ and Python.
 - **Analytics & visualization** – Python package with thinning simulators, diagnostics, plots, and export utilities.
 - **Deterministic backtester** – C++ order book bridged into Python for reproducible order/fill replays and structured metrics.
@@ -64,10 +61,10 @@ Need more context? The step-by-step guide in `docs/USAGE.md` covers the full wor
   <img src="docs/images/timeline_exponential.png" width="720" alt="Event timeline illustration" />
 </p>
 
-The simulator stitches together four stages, mirroring the reference architecture described by Cartea et al. (2015) and Gatheral & Schied (2013):
+The simulator stitches together four stages, mirroring the reference architecture described by Cartea et al. (2015) and Gatheral & Schied (2013):
 
-1. **Hawkes-driven order flow** – calibrated exponential/power-law kernels generate clustered market/limit orders. Timeline plots (above) illustrate self-excitation during liquidity shocks.
-2. **Deterministic matching engine** – the C++17 order book enforces price–time priority and keeps price levels in lock-free queues to reduce cache thrash during bursts.
+1. **Hawkes-driven order flow** – exponential/power-law kernels generate clustered market/limit-order timing scenarios. Timeline plots (above) illustrate self-excitation during liquidity shocks.
+2. **Deterministic matching engine** – the C++20 order book enforces price-time priority and stores resting orders in intrusive FIFO lists at each price level.
 3. **Risk, PnL, and backtesting services** – Python orchestrators replay fills, compute realised/unrealised PnL, and stream metrics to dashboards.
 4. **Visualization & research surfaces** – notebooks and Streamlit panels expose the same artefacts for exploratory analysis or reporting.
 
@@ -75,12 +72,12 @@ The simulator stitches together four stages, mirroring the reference architectur
 
 | Stage | Input | Output | Notes |
 | --- | --- | --- | --- |
-| Feed ingestion | Hawkes samples / recorded CSV | Normalised events in shared memory | Supports Binance, LOBSTER, and synthetic datasets. |
-| Matching | Feed events, strategy orders | Executions, book snapshots | Deterministic, unit-tested (`tests/python/test_order_types.py`). |
+| Feed ingestion | Hawkes samples / recorded CSV | Normalised event arrays | Supports Binance, LOBSTER, and synthetic datasets. |
+| Matching | Feed events, strategy orders | Executions, book snapshots | Deterministic, regression-tested (`tests/order_tests.cpp`). |
 | Risk engine | Executions, snapshots | Inventory, PnL, alerts | Snapshots logged under `logs/` for dashboards. |
 | Analytics | Risk snapshots, raw fills | Plots, CSVs, Streamlit widgets | Artefacts saved in `results/week*/`. |
 
-A single `cmake --build` step compiles both the matching engine and Hawkes bridges; scripts under `python/scripts/` then orchestrate batch experiments and nightly reports.
+A single `cmake --build` step compiles both the matching engine and Hawkes bridges; scripts under `python/scripts/` then orchestrate batch experiments and reports.
 
 ## Illustrated Analytics
 
@@ -89,15 +86,15 @@ A single `cmake --build` step compiles both the matching engine and Hawkes bridg
   <img src="docs/images/arrivals_acf_bins_0.5.png" width="360" alt="Arrivals ACF bins" />
 </p>
 
-- **Intensity tracking** – exponential kernels adapt quickly to surges, while power-law kernels retain memory. The figures above (auto-generated via `python/demo.py`) help compare how different λ choices affect self-excitation, echoing Bouchaud et al. (2009) on supply/demand digestion.
-- **Autocorrelation diagnostics** – arrivals ACFs quantify clustering. Values closer to zero after a few bins imply well-calibrated decay; persistent autocorrelation suggests the need for heavier tails or regime switching.
+- **Intensity tracking** – exponential kernels adapt quickly to surges, while power-law kernels retain memory. The figures above (auto-generated via `python/demo.py`) help compare how different λ choices affect self-excitation, echoing Bouchaud et al. (2009) on supply/demand digestion.
+- **Autocorrelation diagnostics** – arrivals ACFs quantify clustering. Values closer to zero after a few bins suggest weaker residual dependence; persistent autocorrelation suggests the need for heavier tails, seasonality, or regime switching.
 
 <p align="center">
   <img src="docs/images/hawkes_rescale_qq.png" width="360" alt="Rescale QQ" />
   <img src="docs/images/qq_ks_btcusdt.png" width="360" alt="QQ/KS Binance BTCUSDT" />
 </p>
 
-- **Goodness-of-fit** – rescaled QQ and KS plots (stored in `docs/images/`) validate that simulated arrivals match empirical quantiles from Binance BTCUSDT replays. Deviations at the tails highlight where adaptive intensity or exogenous shocks should be introduced.
+- **Goodness-of-fit diagnostics** – rescaled QQ and KS plots (stored in `docs/images/`) diagnose how close fitted or simulated arrivals are to the exponential residual benchmark. Tail deviations highlight where adaptive intensity, seasonality, or exogenous shocks may be needed.
 - **Ready-to-use assets** – these plots are referenced by reports in `docs/week7_*` and `docs/week8_*`, making it easy to embed them in presentations or papers without regenerating graphics manually.
 
 ### Copy & Paste Quickstart
@@ -123,7 +120,7 @@ The docs target drops HTML into `build/docs/html/index.html` ready for review.
 
 
 ### Prerequisites
-- CMake ≥ 3.15 and a C++17-capable compiler (Clang, GCC, or MSVC).
+- CMake >= 3.15 and a C++20-capable compiler (Clang, GCC, or MSVC).
 - Python 3.10+ with `pip` for the analytics layer and Streamlit app.
 
 ### Build the C++ Simulator
@@ -275,7 +272,7 @@ Each run logs deterministic seeds and checkpoints. Artefacts land in `experiment
 - **Limit-order dynamics** — the C++ core models submissions, cancellations, and executions with price-time priority, letting you observe queue evolution as a discrete-event system.
 - **Hawkes intensity** — arrivals follow `λ(t) = μ + \sum_i φ(t - T_i, V_i)`, capturing self-excitation where past trades raise the probability of near-future activity.
 - **Kernel choices** — the exponential kernel `φ(u,v)=α v e^{-βu}` yields Markovian state updates; the power-law alternative `φ(u,v)=α v (u+c)^{-γ}` captures longer memory but requires `γ>1` to stay integrable.
-- **Branching ratio** — expected offspring per event, `n = E[φ]`; keeping `n < 1` (subcritical regime) ensures the simulated process does not explode, mirroring stable market flows.
+- **Branching ratio** — expected offspring per event, `n = E[φ]`; keeping `n < 1` gives the standard subcritical Hawkes regime with finite stationary mean intensity.
 - **Marks** — random volumes (log-normal, exponential, deterministic) feed back into intensity, providing a stylised link between trade size and subsequent activity.
 
 ## Example Outputs
@@ -314,6 +311,6 @@ Below are sample outputs from the Hawkes simulator, comparing exponential and po
 2. Extend the order book with latency models and queue-position analytics.
 3. Expose a REST/gRPC shim for streaming orders to the simulator.
 4. Package the Python tooling for pip installation and add notebook tutorials.
-5. Wire CI (Catch2 + lint + demo smoke test) to keep the repo production-ready.
+5. Wire CI (Catch2 + lint + demo smoke test) to keep the repo maintainable.
 
 Feel free to fork and adapt—this project is meant to be a sandbox for experimentation as much as a reference implementation.
