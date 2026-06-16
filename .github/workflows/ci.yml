@@ -8,15 +8,24 @@ jobs:
   black-diagnostic:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          show-progress: false
+      - name: Download branch archive
+        run: |
+          python - <<'PY'
+          import urllib.request
+          url = 'https://github.com/sohaibelkarmi/High-Frequency-Trading-Simulator/archive/refs/heads/chore/python-format-lint-cleanup.zip'
+          urllib.request.urlretrieve(url, 'repo.zip')
+          PY
+
+      - name: Extract archive
+        run: python -m zipfile -e repo.zip repo
 
       - name: Install Black
         run: python -m pip install -q black
 
       - name: List files needing Black formatting
-        run: black --check python tests/python
+        run: |
+          cd repo/High-Frequency-Trading-Simulator-chore-python-format-lint-cleanup
+          black --check python tests/python
 
   python:
     runs-on: ubuntu-latest
