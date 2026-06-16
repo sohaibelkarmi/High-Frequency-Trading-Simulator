@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   black-autoformat:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/chore/python-format-lint-cleanup'
+    if: github.head_ref == 'chore/python-format-lint-cleanup' || github.ref == 'refs/heads/chore/python-format-lint-cleanup'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
