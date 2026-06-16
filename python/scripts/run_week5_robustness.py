@@ -42,7 +42,6 @@ from python.order_flow.calibration import (  # noqa: E402
 )
 from python.scripts import run_week5_empirical as empirical  # noqa: E402
 
-
 DEFAULT_ASSETS = ("BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT")
 DEFAULT_DELTAS = (0.1, 0.5, 1.0)
 POWER_VOLUME_THRESHOLD = empirical.POWER_VOLUME_THRESHOLD
@@ -424,7 +423,9 @@ def run_pipeline(args: argparse.Namespace) -> int:
 
             exp_fit = empirical.fit_exponential(times_dt, horizon)
             power_fit = empirical.fit_powerlaw(hv_times, horizon, POWER_TRUNCATION)
-            sum_fit = fit_sum_of_exponentials(times_dt, horizon, kernels=args.sumexp_components)
+            sum_fit = fit_sum_of_exponentials(
+                times_dt, horizon, kernels=args.sumexp_components
+            )
 
             for label, fit in (
                 ("exponential", exp_fit),

@@ -9,7 +9,6 @@ from typing import Iterable, Iterator
 
 from .backtester import MarketEvent
 
-
 LOBSTER_MESSAGE_TYPES = {
     "1": "add_order",
     "2": "add_order",

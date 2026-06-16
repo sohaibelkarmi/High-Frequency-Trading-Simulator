@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 MPL_CACHE = PROJECT_ROOT / "results" / ".mpl_cache"
 MPL_CACHE.mkdir(parents=True, exist_ok=True)
@@ -30,6 +29,7 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+
 PYTHON_ROOT = PROJECT_ROOT / "python"
 if str(PYTHON_ROOT) not in sys.path:
     sys.path.insert(0, str(PYTHON_ROOT))
@@ -163,9 +163,7 @@ def aggregate_metrics(
     max_lag: int,
 ) -> Dict[str, object]:
     rho = cfg.rho
-    theoretical_intensity = (
-        cfg.mu / (1.0 - rho) if rho < 1.0 else float("inf")
-    )
+    theoretical_intensity = cfg.mu / (1.0 - rho) if rho < 1.0 else float("inf")
     empirical_mean = float(np.mean(hawkes_summary["mean_intensity"]))
     cond_var = float(np.mean(hawkes_summary["cond_var"]))
     poisson_cond_var = float(np.mean(poisson_summary["cond_var"]))
@@ -225,7 +223,9 @@ def make_intensity_figure(
     for ax, cfg in zip(axes, cfgs):
         grid, intensity = sample_paths[cfg.label]
         ax.plot(grid, intensity, label="Hawkes intensity", lw=1.6)
-        ax.axhline(cfg.mu, color="tab:orange", linestyle="--", label="Poisson intensity")
+        ax.axhline(
+            cfg.mu, color="tab:orange", linestyle="--", label="Poisson intensity"
+        )
         ax.set_title(f"{cfg.label} (rho={cfg.rho:.2f})")
         ax.set_xlabel("time")
         ax.set_xlim(0, horizon)
@@ -252,8 +252,22 @@ def make_acf_figure(
     for ax, cfg, metric in zip(axes, cfgs, metrics):
         hawkes_acf = np.array(metric["mean_acf"], dtype=float)
         poisson_acf = np.array(metric["poisson_mean_acf"], dtype=float)
-        ax.stem(lags, hawkes_acf, linefmt="C0-", markerfmt="C0o", basefmt="k-", label="Hawkes")
-        ax.stem(lags + 0.15, poisson_acf, linefmt="C1-", markerfmt="C1s", basefmt="k-", label="Poisson")
+        ax.stem(
+            lags,
+            hawkes_acf,
+            linefmt="C0-",
+            markerfmt="C0o",
+            basefmt="k-",
+            label="Hawkes",
+        )
+        ax.stem(
+            lags + 0.15,
+            poisson_acf,
+            linefmt="C1-",
+            markerfmt="C1s",
+            basefmt="k-",
+            label="Poisson",
+        )
         ax.set_title(f"{cfg.label}")
         ax.set_xlabel("lag")
         ax.set_ylim(-0.4, 1.0)
@@ -299,8 +313,16 @@ def make_histogram_figure(
         )
         if cfg.rho < 1.0:
             theo_mean = cfg.mu / (1.0 - cfg.rho) * data["horizon"]
-            ax.axvline(theo_mean, color="k", linestyle="--", linewidth=1.2, label="Hawkes mean")
-        ax.axvline(cfg.mu * data["horizon"], color="gray", linestyle=":", linewidth=1.2, label="Poisson mean")
+            ax.axvline(
+                theo_mean, color="k", linestyle="--", linewidth=1.2, label="Hawkes mean"
+            )
+        ax.axvline(
+            cfg.mu * data["horizon"],
+            color="gray",
+            linestyle=":",
+            linewidth=1.2,
+            label="Poisson mean",
+        )
         ax.set_title(cfg.label)
         ax.set_xlabel("event count")
         ax.grid(alpha=0.3)
@@ -345,21 +367,24 @@ def save_metrics_csv(output: Path, metrics: Sequence[Dict[str, object]]) -> None
     lines = [",".join(header)]
     for metric in metrics:
         row = [metric["label"]]
-        row.extend(
-            f"{metric[key]}"  # type: ignore[index]
-            for key in header[1:]
-        )
+        row.extend(f"{metric[key]}" for key in header[1:])  # type: ignore[index]
         lines.append(",".join(map(str, row)))
     output.write_text("\n".join(lines), encoding="utf-8")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paths", type=int, default=128, help="Monte Carlo paths per configuration")
-    parser.add_argument("--horizon", type=float, default=600.0, help="Simulation horizon")
+    parser.add_argument(
+        "--paths", type=int, default=128, help="Monte Carlo paths per configuration"
+    )
+    parser.add_argument(
+        "--horizon", type=float, default=600.0, help="Simulation horizon"
+    )
     parser.add_argument("--max-lag", type=int, default=12, help="Maximum ACF lag")
     parser.add_argument("--seed", type=int, default=1729, help="Base random seed")
-    parser.add_argument("--step", type=float, default=1.0, help="Step for intensity traces")
+    parser.add_argument(
+        "--step", type=float, default=1.0, help="Step for intensity traces"
+    )
     parser.add_argument(
         "--output",
         type=Path,
@@ -454,7 +479,9 @@ def main() -> None:
     final_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     rss_delta = max(0, final_rss - baseline_rss)
     latency_per_event_ms = (
-        (elapsed / hawkes_total_events) * 1_000.0 if hawkes_total_events > 0 else float("nan")
+        (elapsed / hawkes_total_events) * 1_000.0
+        if hawkes_total_events > 0
+        else float("nan")
     )
 
     meta = {
@@ -472,9 +499,15 @@ def main() -> None:
 
     save_metrics_json(output_dir / "metrics.json", metrics, meta)
     save_metrics_csv(output_dir / "metrics.csv", metrics)
-    make_intensity_figure(CONFIGS, sample_paths, figures_dir / "intensity_traces.png", args.horizon)
-    make_acf_figure(CONFIGS, metrics, figures_dir / "interarrival_acf.png", args.max_lag)
-    make_histogram_figure(CONFIGS, histogram_payload, figures_dir / "event_count_hist.png")
+    make_intensity_figure(
+        CONFIGS, sample_paths, figures_dir / "intensity_traces.png", args.horizon
+    )
+    make_acf_figure(
+        CONFIGS, metrics, figures_dir / "interarrival_acf.png", args.max_lag
+    )
+    make_histogram_figure(
+        CONFIGS, histogram_payload, figures_dir / "event_count_hist.png"
+    )
 
 
 if __name__ == "__main__":

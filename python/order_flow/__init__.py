@@ -13,4 +13,3 @@ __all__ = [
     "log_likelihood_hawkes_exp",
     "fit_hawkes_exponential_mle",
 ]
-

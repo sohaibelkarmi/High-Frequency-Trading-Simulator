@@ -58,7 +58,9 @@ def _sortino(returns: np.ndarray, target: float = 0.0) -> float:
     return mean_excess / downside_std
 
 
-def compute_risk_metrics(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, np.ndarray]]:
+def compute_risk_metrics(
+    df: pd.DataFrame,
+) -> Tuple[pd.DataFrame, Dict[str, np.ndarray]]:
     metrics: List[Dict[str, float]] = []
     cumulative_paths: Dict[str, np.ndarray] = {}
     grouped = df.groupby("strategy")
@@ -91,7 +93,9 @@ def compute_risk_metrics(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, np.n
 
 def _plot_distributions(df: pd.DataFrame, output_path: Path) -> None:
     strategies = sorted(df["strategy"].unique())
-    fig, axes = plt.subplots(1, len(strategies), figsize=(6 * len(strategies), 4), sharey=True)
+    fig, axes = plt.subplots(
+        1, len(strategies), figsize=(6 * len(strategies), 4), sharey=True
+    )
     if len(strategies) == 1:
         axes = [axes]
     for ax, strategy in zip(axes, strategies):
@@ -105,7 +109,9 @@ def _plot_distributions(df: pd.DataFrame, output_path: Path) -> None:
     plt.close(fig)
 
 
-def _plot_cumulative(cumulative_paths: Dict[str, np.ndarray], output_path: Path) -> None:
+def _plot_cumulative(
+    cumulative_paths: Dict[str, np.ndarray], output_path: Path
+) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
     for strategy, path in cumulative_paths.items():
         if path.size == 0:

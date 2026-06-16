@@ -416,8 +416,10 @@ def _trades_3d_figure(
 
     if timeline.times.size:
         primary_intensity = _interpolate_intensity(timeline)
-        primary_volume = np.cumsum(timeline.marks) if timeline.marks.size else np.zeros(
-            timeline.times.shape
+        primary_volume = (
+            np.cumsum(timeline.marks)
+            if timeline.marks.size
+            else np.zeros(timeline.times.shape)
         )
         fig.add_trace(
             go.Scatter3d(
@@ -548,8 +550,7 @@ def main() -> None:
     )
 
     with st.expander("Learn more"):
-        st.write(
-            """
+        st.write("""
             Hawkes processes model event clustering in finance, seismology, and even
             social media. In markets they describe bursts of trading activity: a burst
             of orders today makes another burst more likely a moment later. Experiment
@@ -557,8 +558,7 @@ def main() -> None:
             order sizes to see calm periods, frenzies, or near-critical cascades
             emerge. No prior microstructure knowledge is needed—just move the sliders
             and watch how the timeline reacts.
-            """
-        )
+            """)
 
     st.sidebar.header("Market regimes")
 

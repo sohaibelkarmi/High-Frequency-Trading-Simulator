@@ -116,7 +116,9 @@ def generate_market_series(
     }
 
 
-def _kmeans_1d(values: np.ndarray, clusters: int, seed: int) -> Tuple[np.ndarray, np.ndarray]:
+def _kmeans_1d(
+    values: np.ndarray, clusters: int, seed: int
+) -> Tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     values = values.reshape(-1)
     count = values.shape[0]
@@ -144,7 +146,9 @@ def _kmeans_1d(values: np.ndarray, clusters: int, seed: int) -> Tuple[np.ndarray
 
 
 def classify_regimes(realized_vol: np.ndarray, window: int, seed: int) -> np.ndarray:
-    rolling = pd.Series(realized_vol).rolling(window=window, min_periods=1).mean().to_numpy()
+    rolling = (
+        pd.Series(realized_vol).rolling(window=window, min_periods=1).mean().to_numpy()
+    )
     labels, centres = _kmeans_1d(rolling, 3, seed)
     order = np.argsort(centres)
     mapping = {order[0]: "low_vol", order[1]: "transition", order[2]: "high_vol"}
@@ -209,13 +213,15 @@ class AdaptiveStrategy:
         risk_cap = params["risk_cap"]
         delta = np.clip(delta, -risk_cap - self.position, risk_cap - self.position)
 
-        latency_penalty = self.latency_stats.variance() / (50.0 + self.latency_stats.variance())
+        latency_penalty = self.latency_stats.variance() / (
+            50.0 + self.latency_stats.variance()
+        )
         pnl_drift = self.pnl_stats.drift()
         pnl_boost = pnl_drift / (1_000.0 + abs(pnl_drift))
         vol_penalty = self.vol_stats.mean() / (0.8 + self.vol_stats.mean())
         aggressiveness = params["aggressiveness"]
-        aggressiveness *= (1.0 - latency_penalty)
-        aggressiveness *= (1.0 - vol_penalty)
+        aggressiveness *= 1.0 - latency_penalty
+        aggressiveness *= 1.0 - vol_penalty
         aggressiveness += pnl_boost
         aggressiveness = float(np.clip(aggressiveness, 0.2, 2.0))
 
@@ -270,7 +276,11 @@ class AdaptiveStrategy:
             returns = np.diff(pnl_series, prepend=pnl_series[0])
             vol = returns.std() if returns.size else 0.0
             sharpe = (returns.mean() / vol * np.sqrt(len(returns))) if vol > 0 else 0.0
-            drawdowns = np.maximum.accumulate(pnl_series) - pnl_series if pnl_series.size else np.array([0.0])
+            drawdowns = (
+                np.maximum.accumulate(pnl_series) - pnl_series
+                if pnl_series.size
+                else np.array([0.0])
+            )
             max_dd = float(drawdowns.max()) if drawdowns.size else 0.0
             regime_groups.append(
                 {
@@ -282,7 +292,11 @@ class AdaptiveStrategy:
                     "max_drawdown": float(max_dd),
                     "avg_latency_ms": float(group["latency_ms"].mean()),
                     "fill_rate": float(self.trades / max(self.trade_attempts, 1)),
-                    "adaptation_lag": float(np.mean(self.adaptation_lags)) if self.adaptation_lags else 0.0,
+                    "adaptation_lag": (
+                        float(np.mean(self.adaptation_lags))
+                        if self.adaptation_lags
+                        else 0.0
+                    ),
                 }
             )
         lag_series = pd.Series(self.adaptation_lags or [0.0])
@@ -300,7 +314,9 @@ class AdaptiveStrategy:
         return pd.DataFrame(regime_groups), meta
 
 
-def run_dataset(name: str, steps: int, window: int) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def run_dataset(
+    name: str, steps: int, window: int
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     cfg = DATASET_CONFIGS[name]
     series = generate_market_series(cfg, steps)
     regimes = classify_regimes(series["realized_vol"], window, cfg["seed"])
@@ -320,8 +336,15 @@ def run_dataset(name: str, steps: int, window: int) -> Tuple[pd.DataFrame, pd.Da
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--steps", type=int, default=2000, help="Simulation steps per dataset")
-    parser.add_argument("--window", type=int, default=40, help="Rolling window for regime classification")
+    parser.add_argument(
+        "--steps", type=int, default=2000, help="Simulation steps per dataset"
+    )
+    parser.add_argument(
+        "--window",
+        type=int,
+        default=40,
+        help="Rolling window for regime classification",
+    )
     args = parser.parse_args()
 
     summaries: List[pd.DataFrame] = []

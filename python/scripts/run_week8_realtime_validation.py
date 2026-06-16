@@ -42,7 +42,9 @@ class OMSScenario:
     seed: int
 
 
-def _lognormal_latencies(mean_us: float, sigma: float, size: int, rng: np.random.Generator) -> np.ndarray:
+def _lognormal_latencies(
+    mean_us: float, sigma: float, size: int, rng: np.random.Generator
+) -> np.ndarray:
     mu = math.log(mean_us) - 0.5 * sigma * sigma
     return rng.lognormal(mean=mu, sigma=sigma, size=size)
 
@@ -106,17 +108,25 @@ def simulate_oms_validation() -> Path:
     for scenario in scenarios:
         rng = np.random.default_rng(scenario.seed)
         entry = np.clip(
-            _lognormal_latencies(scenario.entry_target_us, 0.3, scenario.operations, rng),
+            _lognormal_latencies(
+                scenario.entry_target_us, 0.3, scenario.operations, rng
+            ),
             50.0,
             None,
         )
         cancel = np.clip(
-            _lognormal_latencies(scenario.cancel_target_us, 0.28, scenario.operations, rng),
+            _lognormal_latencies(
+                scenario.cancel_target_us, 0.28, scenario.operations, rng
+            ),
             40.0,
             None,
         )
-        confirmations = rng.binomial(1, 1.0 - scenario.confirmation_error_bp / 10_000.0, size=scenario.operations)
-        sync_jitter = rng.normal(0.0, scenario.position_drift_bp / 10.0, size=scenario.operations)
+        confirmations = rng.binomial(
+            1, 1.0 - scenario.confirmation_error_bp / 10_000.0, size=scenario.operations
+        )
+        sync_jitter = rng.normal(
+            0.0, scenario.position_drift_bp / 10.0, size=scenario.operations
+        )
         rows.append(
             {
                 "scenario": scenario.name,

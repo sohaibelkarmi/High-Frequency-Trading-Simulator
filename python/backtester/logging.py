@@ -159,15 +159,13 @@ class MetricsLogger:
     def _initialise_sqlite(self) -> None:
         assert self._conn is not None
         cur = self._conn.cursor()
-        cur.execute(
-            """
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS metrics (
                 timestamp_ns INTEGER,
                 event_type TEXT,
                 payload TEXT
             )
-            """
-        )
+            """)
         self._conn.commit()
 
     def close(self) -> None:

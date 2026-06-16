@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Iterable, List
 
-
 BENCHMARK_CSV_FIELDS: tuple[str, ...] = (
     "label",
     "events",

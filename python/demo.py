@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 from .bridge_utils import ensure_bridge_path
 
-
 ensure_bridge_path()
 
 try:
