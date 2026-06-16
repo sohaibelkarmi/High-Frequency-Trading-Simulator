@@ -4,8 +4,12 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
-  black-diagnostic:
+  black-autoformat:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/chore/python-format-lint-cleanup'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,17 +22,11 @@ jobs:
       - name: Format Python files
         run: black python tests/python
 
-      - name: Package formatted files
-        run: zip -r formatted-python.zip python tests/python
-
-      - name: Upload formatted files
-        uses: actions/upload-artifact@v4
+      - name: Commit formatting changes
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          name: formatted-python
-          path: formatted-python.zip
-
-      - name: Check formatting
-        run: black --check python tests/python
+          commit_message: Format Python package with Black
+          file_pattern: python tests/python
 
   python:
     runs-on: ubuntu-latest
