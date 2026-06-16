@@ -25,9 +25,7 @@ class CollectingStrategy(StrategyCallbacks):
     def __init__(self) -> None:
         self.snapshots = []
 
-    def on_market_data(
-        self, snapshot, ctx
-    ) -> None:  # pragma: no cover - simple container
+    def on_market_data(self, snapshot, ctx) -> None:
         self.snapshots.append(snapshot)
 
 
