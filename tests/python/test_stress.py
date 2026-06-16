@@ -14,7 +14,10 @@ from python.scripts.run_stress_suite import run_suite as run_stress_suite
 
 def test_order_book_stress_metrics_smoke(tmp_path: Path) -> None:
     config = StressConfig(
-        message_count=500, seed=42, max_price_jitter=0.5, max_size=5.0
+        message_count=500,
+        seed=42,
+        max_price_jitter=0.5,
+        max_size=5.0,
     )
     profile_path = tmp_path / "profile.txt"
     metrics = run_order_book_stress(config, profiler_output=profile_path)
@@ -40,7 +43,9 @@ def test_order_book_stress_hotspots_ranked() -> None:
 
 def test_poisson_stress_records_latency_and_sequence() -> None:
     poisson_cfg = PoissonOrderFlowConfig(
-        message_count=300, seed=99, base_rate_hz=1_000.0
+        message_count=300,
+        seed=99,
+        base_rate_hz=1_000.0,
     )
     config = StressConfig(
         poisson=poisson_cfg,
@@ -68,7 +73,10 @@ def test_poisson_stress_records_latency_and_sequence() -> None:
 
 def test_stress_suite_runner(tmp_path: Path) -> None:
     results = run_stress_suite(
-        tmp_path, base_messages=500, base_rate_hz=2_000.0, seed=17
+        tmp_path,
+        base_messages=500,
+        base_rate_hz=2_000.0,
+        seed=17,
     )
 
     output_file = tmp_path / "stress_suite.json"
