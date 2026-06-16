@@ -55,7 +55,9 @@ def test_sequence_validator_flags_invalid_order() -> None:
         MarketEvent(timestamp_ns=10, event_type="add_order", payload={"order_id": 1}),
         MarketEvent(timestamp_ns=9, event_type="delete_order", payload={"order_id": 5}),
         MarketEvent(
-            timestamp_ns=11, event_type="execute_order", payload={"order_id": 2}
+            timestamp_ns=11,
+            event_type="execute_order",
+            payload={"order_id": 2},
         ),
     ]
 
