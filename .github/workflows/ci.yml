@@ -5,6 +5,19 @@ on:
   pull_request:
 
 jobs:
+  black-diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Install Black
+        run: python -m pip install -q black
+
+      - name: List files needing Black formatting
+        run: black --check python tests/python
+
   python:
     runs-on: ubuntu-latest
     strategy:
