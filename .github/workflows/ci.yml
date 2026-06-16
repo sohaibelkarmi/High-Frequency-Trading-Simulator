@@ -34,10 +34,10 @@ jobs:
           pip install pytest pytest-cov black flake8
 
       - name: Check formatting
-        run: black --check tests/python
+        run: black --check python tests/python
 
       - name: Lint
-        run: flake8 tests/python
+        run: flake8 python tests/python
 
       - name: Run tests
         run: pytest tests/python --cov=python --cov-report=xml
