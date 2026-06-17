@@ -53,7 +53,6 @@ from scipy.stats import expon, kstest
 
 from python.order_flow.calibration import fit_hawkes_exponential_mle
 
-
 # -----------------------------------------------------------------------------
 # Configuration defaults
 # -----------------------------------------------------------------------------
@@ -214,7 +213,9 @@ def _powerlaw_loglik_grad(
 
         grad_mu += 1.0 / intensity - dt
         grad_alpha += sum_kernel / intensity - diff_AB * inv
-        grad_c += alpha * sum_kernel_dc / intensity - alpha * (A_curr_dc - B_prev_dc) * inv
+        grad_c += (
+            alpha * sum_kernel_dc / intensity - alpha * (A_curr_dc - B_prev_dc) * inv
+        )
         grad_gamma += (
             alpha * sum_kernel_dgamma / intensity
             - alpha * (A_curr_dgamma - B_prev_dgamma) * inv
@@ -549,7 +550,9 @@ def fit_powerlaw(
     )
 
     mu, alpha, c, gamma = result.x
-    ll, _, _, _, _ = _powerlaw_loglik_grad(times, mu, alpha, c, gamma, horizon, truncation)
+    ll, _, _, _, _ = _powerlaw_loglik_grad(
+        times, mu, alpha, c, gamma, horizon, truncation
+    )
     loglik = float(ll)
     if not result.success or ll <= -1e307 or not np.isfinite(loglik):
         return PowerLawFit(
@@ -752,7 +755,9 @@ def plot_branching_ratios(metrics: pd.DataFrame) -> None:
         label="Power-law",
         color="C1",
     )
-    ax.axhline(BRANCHING_WARN_LEVEL, color="red", linestyle="--", linewidth=1.0, alpha=0.6)
+    ax.axhline(
+        BRANCHING_WARN_LEVEL, color="red", linestyle="--", linewidth=1.0, alpha=0.6
+    )
     ax.set_xlabel("Elapsed hours since 2025-09-19 UTC")
     ax.set_ylabel("Branching ratio ρ")
     ax.set_title("Branching ratio evolution (1h windows, 50% overlap)")
@@ -882,7 +887,9 @@ def plot_residual_diagnostics(
 ) -> None:
     if not sample_windows:
         return
-    fig, axes = plt.subplots(len(sample_windows), 4, figsize=(16, 4 * len(sample_windows)))
+    fig, axes = plt.subplots(
+        len(sample_windows), 4, figsize=(16, 4 * len(sample_windows))
+    )
 
     if len(sample_windows) == 1:
         axes = np.expand_dims(axes, 0)
@@ -907,7 +914,9 @@ def plot_residual_diagnostics(
         if pow_fit.residuals is not None:
             qq_plot(pow_fit.residuals, axes[row_idx, 3], "Power-law Q-Q")
         else:
-            axes[row_idx, 3].text(0.5, 0.5, "Power-law fit failed", ha="center", va="center")
+            axes[row_idx, 3].text(
+                0.5, 0.5, "Power-law fit failed", ha="center", va="center"
+            )
             axes[row_idx, 3].axis("off")
 
     fig.tight_layout()
@@ -980,10 +989,19 @@ def plot_intensity_vs_counts(
     centres = 0.5 * (bins[:-1] + bins[1:])
 
     grid_exp, intensity_exp = compute_exponential_intensity_grid(
-        window.times_all, exp_fit.mu, exp_fit.alpha, exp_fit.beta, WINDOW_SECONDS, grid_step
+        window.times_all,
+        exp_fit.mu,
+        exp_fit.alpha,
+        exp_fit.beta,
+        WINDOW_SECONDS,
+        grid_step,
     )
-    axes[0].bar(centres, counts, width=grid_step, color="lightgray", label="Observed trades")
-    axes[0].plot(grid_exp, intensity_exp * grid_step, color="C0", label="Exp intensity × Δt")
+    axes[0].bar(
+        centres, counts, width=grid_step, color="lightgray", label="Observed trades"
+    )
+    axes[0].plot(
+        grid_exp, intensity_exp * grid_step, color="C0", label="Exp intensity × Δt"
+    )
     axes[0].set_ylabel("Count per bin")
     axes[0].set_title(f"Window {window.window_id:04d} — Exponential fit")
     axes[0].legend()
@@ -1001,8 +1019,19 @@ def plot_intensity_vs_counts(
             grid_step,
         )
         filtered_counts, _ = np.histogram(window.times_filtered, bins=bins)
-        axes[1].bar(centres, filtered_counts, width=grid_step, color="lightgray", label="Filtered trades")
-        axes[1].plot(grid_pow, intensity_pow * grid_step, color="C1", label="Power-law intensity × Δt")
+        axes[1].bar(
+            centres,
+            filtered_counts,
+            width=grid_step,
+            color="lightgray",
+            label="Filtered trades",
+        )
+        axes[1].plot(
+            grid_pow,
+            intensity_pow * grid_step,
+            color="C1",
+            label="Power-law intensity × Δt",
+        )
     else:
         axes[1].text(0.5, 0.5, "Power-law fit unavailable", ha="center", va="center")
     axes[1].set_xlabel("Seconds within window")
@@ -1060,7 +1089,9 @@ def run_pipeline(args: argparse.Namespace) -> None:
     exp_fits: List[ExponentialFit] = []
     pow_fits: List[PowerLawFit] = []
 
-    max_windows = args.max_windows if getattr(args, "max_windows", None) is not None else None
+    max_windows = (
+        args.max_windows if getattr(args, "max_windows", None) is not None else None
+    )
 
     prev_pow: Optional[Tuple[float, float, float, float]] = None
 
@@ -1071,7 +1102,9 @@ def run_pipeline(args: argparse.Namespace) -> None:
         exp_fit = fit_exponential(slice_.times_all, WINDOW_SECONDS)
         exp_fits.append(exp_fit)
 
-        pow_fit = fit_powerlaw(slice_.times_filtered, WINDOW_SECONDS, POWER_TRUNCATION, initial=prev_pow)
+        pow_fit = fit_powerlaw(
+            slice_.times_filtered, WINDOW_SECONDS, POWER_TRUNCATION, initial=prev_pow
+        )
         pow_fits.append(pow_fit)
         if pow_fit.success and np.isfinite(pow_fit.mu):
             prev_pow = (pow_fit.mu, pow_fit.alpha, pow_fit.c, pow_fit.gamma)
@@ -1093,7 +1126,9 @@ def run_pipeline(args: argparse.Namespace) -> None:
     metrics.to_csv(METRICS_PATH, index=False)
 
     metadata = {
-        "base_timestamp_utc": pd.to_datetime(base_ts_ms, unit="ms", utc=True).isoformat(),
+        "base_timestamp_utc": pd.to_datetime(
+            base_ts_ms, unit="ms", utc=True
+        ).isoformat(),
         "window_seconds": WINDOW_SECONDS,
         "window_overlap": WINDOW_OVERLAP,
         "power_volume_threshold": POWER_VOLUME_THRESHOLD,
@@ -1118,7 +1153,9 @@ def run_pipeline(args: argparse.Namespace) -> None:
     if sample_windows:
         # Plot intensity comparison for the middle sample window.
         target = sample_windows[min(len(sample_windows) // 2, len(sample_windows) - 1)]
-        plot_intensity_vs_counts(target, exp_map[target.window_id], pow_map[target.window_id])
+        plot_intensity_vs_counts(
+            target, exp_map[target.window_id], pow_map[target.window_id]
+        )
 
     print(f"Processed {len(windows)} windows. Metrics saved to {METRICS_PATH}")
 

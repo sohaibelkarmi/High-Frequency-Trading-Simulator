@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from statistics import mean
 from typing import Dict, Iterable, List, Sequence, Tuple
 
-
 ARCHITECTURE_CSV_FIELDS: tuple[str, ...] = (
     "variant",
     "iteration",
@@ -45,9 +44,7 @@ class ArchitectureRun:
     message_avg_ns: float | None
 
     def to_row(self) -> Dict[str, object]:
-        return {
-            field: getattr(self, field) for field in ARCHITECTURE_CSV_FIELDS
-        }
+        return {field: getattr(self, field) for field in ARCHITECTURE_CSV_FIELDS}
 
 
 def rows_for_csv(runs: Iterable[ArchitectureRun]) -> List[Dict[str, object]]:
@@ -68,9 +65,7 @@ def summarise_by_variant(
             "runs": len(variant_runs),
             "unique_digests": len(digests),
             "avg_wall_time_s": mean(run.wall_time_s for run in variant_runs),
-            "avg_throughput_msg_s": mean(
-                run.throughput_msg_s for run in variant_runs
-            ),
+            "avg_throughput_msg_s": mean(run.throughput_msg_s for run in variant_runs),
         }
         matching = [
             run.matching_avg_ns
@@ -78,9 +73,7 @@ def summarise_by_variant(
             if run.matching_avg_ns is not None
         ]
         message = [
-            run.message_avg_ns
-            for run in variant_runs
-            if run.message_avg_ns is not None
+            run.message_avg_ns for run in variant_runs if run.message_avg_ns is not None
         ]
         if matching:
             summary[variant]["avg_matching_ns"] = mean(matching)

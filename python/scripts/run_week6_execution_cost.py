@@ -52,7 +52,9 @@ def run_runner(runner: Path) -> None:
     print(f"[info] Running {runner} to generate Monte Carlo samples …")
     result = subprocess.run([str(runner)], cwd=str(ROOT))
     if result.returncode != 0:
-        raise RuntimeError(f"execution_cost_runner exited with code {result.returncode}")
+        raise RuntimeError(
+            f"execution_cost_runner exited with code {result.returncode}"
+        )
 
 
 def load_csv(path: Path) -> pd.DataFrame:
@@ -96,14 +98,22 @@ def plot_slippage_vs_aggressiveness(df: pd.DataFrame, path: Path) -> None:
 
 
 def plot_impact_breakdown(df: pd.DataFrame, path: Path) -> None:
-    grouped = df.groupby("order_size")[
-        ["temporary_cost", "permanent_cost"]
-    ].mean().sort_index()
+    grouped = (
+        df.groupby("order_size")[["temporary_cost", "permanent_cost"]]
+        .mean()
+        .sort_index()
+    )
     indices = np.arange(grouped.shape[0])
     width = 0.6
 
     plt.figure(figsize=(8, 5))
-    plt.bar(indices, grouped["temporary_cost"], width=width, label="Temporary", color="#ef6c00")
+    plt.bar(
+        indices,
+        grouped["temporary_cost"],
+        width=width,
+        label="Temporary",
+        color="#ef6c00",
+    )
     plt.bar(
         indices,
         grouped["permanent_cost"],
@@ -128,19 +138,24 @@ def compute_tradeoff_curve(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["aggr_bin"] = pd.cut(df["aggressiveness"], bins=bins, include_lowest=True)
     curve = (
-        df.groupby("aggr_bin", observed=False)[["aggressiveness", "total_cost", "shortfall"]]
+        df.groupby("aggr_bin", observed=False)[
+            ["aggressiveness", "total_cost", "shortfall"]
+        ]
         .mean()
         .dropna()
     )
-    curve = curve.rename(columns={"total_cost": "mean_total_cost", "shortfall": "mean_shortfall"})
+    curve = curve.rename(
+        columns={"total_cost": "mean_total_cost", "shortfall": "mean_shortfall"}
+    )
     curve.reset_index(drop=True, inplace=True)
     return curve
 
 
-
 def plot_tradeoff_curve(curve: pd.DataFrame, path: Path) -> None:
     plt.figure(figsize=(8, 5))
-    plt.plot(curve["aggressiveness"], curve["mean_total_cost"], marker="o", color="#3949ab")
+    plt.plot(
+        curve["aggressiveness"], curve["mean_total_cost"], marker="o", color="#3949ab"
+    )
     plt.title("Cost vs. Aggressiveness Trade-off")
     plt.xlabel("Aggressiveness bin centre")
     plt.ylabel("Mean total cost (USD)")

@@ -80,9 +80,9 @@ def log_likelihood_hawkes_exp(
     if np.any(intensities <= 0):
         return -np.inf
 
-    integral_tail = np.sum(
-        marks_arr * (1.0 - np.exp(-beta * (horizon - times_arr)))
-    ) / beta
+    integral_tail = (
+        np.sum(marks_arr * (1.0 - np.exp(-beta * (horizon - times_arr)))) / beta
+    )
     integral = mu * horizon + alpha * integral_tail
     return float(np.sum(np.log(intensities)) - integral)
 
@@ -112,9 +112,7 @@ def fit_hawkes_exponential_mle(
     marks: Optional[Sequence[float] | np.ndarray] = None,
     horizon: Optional[float] = None,
     initial: Optional[Tuple[float, float, float]] = None,
-    bounds: Optional[
-        Sequence[Tuple[float | None, float | None]]
-    ] = None,
+    bounds: Optional[Sequence[Tuple[float | None, float | None]]] = None,
 ) -> OptimizeResult:
     """Estimate (mu, alpha, beta) by maximising the exponential Hawkes log-likelihood."""
     times_arr = _as_array(times)
@@ -148,9 +146,7 @@ def fit_hawkes_exponential_mle(
         bounds=bounds,
         method="L-BFGS-B",
     )
-    result.log_likelihood_ = (
-        -result.fun if np.isfinite(result.fun) else -np.inf
-    )
+    result.log_likelihood_ = -result.fun if np.isfinite(result.fun) else -np.inf
     return result
 
 
@@ -298,9 +294,7 @@ def fit_hawkes_sum_exp_mle(
         bounds=bounds,
         method="L-BFGS-B",
     )
-    result.log_likelihood_ = (
-        -result.fun if np.isfinite(result.fun) else -np.inf
-    )
+    result.log_likelihood_ = -result.fun if np.isfinite(result.fun) else -np.inf
     return result
 
 

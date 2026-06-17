@@ -20,7 +20,6 @@ from backtester import (
 from backtester.order_book import load_order_book
 from strategies import MarketMakingConfig, MarketMakingStrategy
 
-
 st.set_page_config(page_title="HFT Backtester", layout="wide")
 st.title("Hawkes-driven HFT Backtester")
 

@@ -33,9 +33,15 @@ def write_optimized_perf() -> Path:
         writer.writerow(fields)
         for scenario, metric, baseline, optimized in rows:
             improvement = (
-                0.0 if baseline == 0 else (baseline - optimized) / baseline * 100.0
-                if metric.endswith("latency_us") or metric.endswith("packet_loss_bp") or metric.endswith("queue_backlog")
-                else (optimized - baseline) / baseline * 100.0
+                0.0
+                if baseline == 0
+                else (
+                    (baseline - optimized) / baseline * 100.0
+                    if metric.endswith("latency_us")
+                    or metric.endswith("packet_loss_bp")
+                    or metric.endswith("queue_backlog")
+                    else (optimized - baseline) / baseline * 100.0
+                )
             )
             writer.writerow(
                 [

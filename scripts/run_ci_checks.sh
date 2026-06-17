@@ -11,10 +11,10 @@ export PYTHONPATH="${ROOT_DIR}:${PYTHONPATH:-}"
 cd "${ROOT_DIR}"
 
 echo "[ci] Formatting check (black)"
-black --check tests/python
+black --check python tests/python
 
 echo "[ci] Linting (flake8)"
-flake8 tests/python
+flake8 python tests/python
 
 echo "[ci] Running pytest"
 PYTEST_ADDOPTS="${PYTEST_ADDOPTS:-} --cache-clear" python -m pytest tests/python -q

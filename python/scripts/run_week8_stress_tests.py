@@ -91,7 +91,11 @@ def generate_fault_metrics() -> Path:
 def write_resource_profile() -> Path:
     path = RESULTS_DIR / "resource_profile.txt"
     hot_spots = [
-        ("matching::match_into", 47.3, "Cache misses spike at depth >8, optimize price-level iterator."),
+        (
+            "matching::match_into",
+            47.3,
+            "Cache misses spike at depth >8, optimize price-level iterator.",
+        ),
         ("feeds::decode_l2", 18.9, "Consider SIMD decoding for batched packets."),
         ("risk::snapshot", 12.4, "Lock contention on inventory map; shard by symbol."),
     ]
@@ -119,9 +123,21 @@ def write_resource_profile() -> Path:
 def log_failover_sessions() -> Path:
     path = LOGS_DIR / "failover_tests.log"
     sessions = [
-        {"checkpoint": "2024-08-14T10:15:32Z", "reason": "network_disconnect", "lag_ms": 142.0},
-        {"checkpoint": "2024-08-14T10:45:10Z", "reason": "mq_overflow", "lag_ms": 188.4},
-        {"checkpoint": "2024-08-14T11:05:44Z", "reason": "manual_failover", "lag_ms": 129.8},
+        {
+            "checkpoint": "2024-08-14T10:15:32Z",
+            "reason": "network_disconnect",
+            "lag_ms": 142.0,
+        },
+        {
+            "checkpoint": "2024-08-14T10:45:10Z",
+            "reason": "mq_overflow",
+            "lag_ms": 188.4,
+        },
+        {
+            "checkpoint": "2024-08-14T11:05:44Z",
+            "reason": "manual_failover",
+            "lag_ms": 129.8,
+        },
     ]
     rng = random.Random(77)
     with path.open("w", encoding="utf-8") as handle:

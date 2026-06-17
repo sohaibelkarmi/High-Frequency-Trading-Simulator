@@ -101,7 +101,9 @@ def _apply_risk_cap(state: StrategyState, qty: float) -> float:
     return 0.0
 
 
-def _execute_order(state: StrategyState, qty: float, price: float, rng: np.random.Generator) -> float:
+def _execute_order(
+    state: StrategyState, qty: float, price: float, rng: np.random.Generator
+) -> float:
     state.attempted_trades += 1
     latency_ms = float(rng.lognormal(mean=1.2, sigma=0.45))
     utilization = min(abs(state.position) / max(state.params.risk_cap, 1e-6), 1.0)
@@ -144,7 +146,9 @@ def _summarize_state(state: StrategyState) -> Dict[str, float]:
     fill_rate = (
         state.trade_count / state.attempted_trades if state.attempted_trades else 0.0
     )
-    position_vol = float(np.std(state.position_history)) if state.position_history else 0.0
+    position_vol = (
+        float(np.std(state.position_history)) if state.position_history else 0.0
+    )
     horizon = max(len(state.position_history), 1)
     return {
         "realized_pnl": realized,
@@ -192,7 +196,9 @@ def simulate_market(
             else:
                 target = _trend_follow_target(state, snapshot_price)
             raw_delta = target - state.position
-            capped_delta = float(np.clip(raw_delta, -state.params.order_size, state.params.order_size))
+            capped_delta = float(
+                np.clip(raw_delta, -state.params.order_size, state.params.order_size)
+            )
             trade_qty = _apply_risk_cap(state, capped_delta)
             if abs(trade_qty) < 1e-9:
                 continue
@@ -224,7 +230,9 @@ def simulate_market(
     market_metrics = {
         "price_volatility": float(np.std(np.diff(price_history))),
         "mean_net_flow": float(np.mean(net_flow_history)) if net_flow_history else 0.0,
-        "net_flow_volatility": float(np.std(net_flow_history)) if net_flow_history else 0.0,
+        "net_flow_volatility": (
+            float(np.std(net_flow_history)) if net_flow_history else 0.0
+        ),
     }
     return metrics, market_metrics
 
@@ -266,7 +274,13 @@ def run_grid_search(
     seeds: List[int],
     steps: int,
 ) -> List[Dict[str, float]]:
-    keys = ["lambda_", "order_size", "aggressiveness", "latency_sensitivity", "risk_cap"]
+    keys = [
+        "lambda_",
+        "order_size",
+        "aggressiveness",
+        "latency_sensitivity",
+        "risk_cap",
+    ]
     combos = list(itertools.product(*(param_grid[key] for key in keys)))
     rows: List[Dict[str, float]] = []
     for values in combos:
@@ -291,10 +305,7 @@ def run_concurrent_simulation(
     market_points: List[Dict[str, float]] = []
     for seed in seeds:
         metrics, market = simulate_market(
-            {
-                name: (name, params)
-                for name, params in configs.items()
-            },
+            {name: (name, params) for name, params in configs.items()},
             steps=steps,
             seed=seed,
         )
@@ -304,7 +315,9 @@ def run_concurrent_simulation(
 
     summary: Dict[str, Dict[str, float]] = {}
     for name, rows in per_strategy.items():
-        summary[name] = {key: float(np.mean([row[key] for row in rows])) for key in rows[0]}
+        summary[name] = {
+            key: float(np.mean([row[key] for row in rows])) for key in rows[0]
+        }
     summary["market"] = {
         key: float(np.mean([point[key] for point in market_points]))
         for key in market_points[0]
@@ -363,7 +376,9 @@ def plot_concurrent(summary: Dict[str, Dict[str, float]], path: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--steps", type=int, default=5000, help="Simulation steps per run")
+    parser.add_argument(
+        "--steps", type=int, default=5000, help="Simulation steps per run"
+    )
     parser.add_argument(
         "--seeds",
         type=int,
@@ -433,7 +448,9 @@ def main() -> None:
 
     print(f"[info] Calibration results written to {csv_path}")
     print(f"[info] Best config summary saved to {top_path}")
-    print(f"[info] Concurrent metrics saved to {RESULTS_DIR / 'concurrent_summary.json'}")
+    print(
+        f"[info] Concurrent metrics saved to {RESULTS_DIR / 'concurrent_summary.json'}"
+    )
     print(f"[info] Plots available under {PLOTS_DIR}")
 
 
